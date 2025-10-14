@@ -318,15 +318,15 @@
             switch (canvasID) {
                 case "can1":
                     level = lev1;
-                    stars3 = 4.50;
-                    stars2 = 5.50;
-                    stars1 = 7.00;
+                    stars3 = 21.00;
+                    stars2 = 22.50;
+                    stars1 = 24.00;
                     break;
                 case "can2":
                     level = lev2;
-                    stars3 = 11.00;
-                    stars2 = 12.50;
-                    stars1 = 14.00;
+                    stars3 = 11.50;
+                    stars2 = 13.00;
+                    stars1 = 15.00;
                     break;
                 case "can3":
                     level = lev3;
@@ -949,8 +949,8 @@
         }
 
         //niveaux
-        function lev1() {
-            c = $("can1");
+        function lev3() {
+            c = $("can3");
             ctx = c.getContext("2d");
             ctx.strokeStyle = "white";
             ctx.fillStyle = "white";
@@ -1084,8 +1084,8 @@
             list_spikes = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19];
             list_eject = [e1, e2, e3];
         }
-        function lev3() { //Co-designed with Simon Denys
-            c = $("can3");
+        function lev1() { //Co-designed with Simon Denys
+            c = $("can1");
             ctx = c.getContext("2d");
             ctx.strokeStyle = "white";
             ctx.fillStyle = "white";
