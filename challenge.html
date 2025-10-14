@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+        }
+
+        #niveaux {
+            position: relative;
+            top: 180px;
+            color: white;
+        }
+
+        .boutonsniveaux {
+            width: 350px;
+            height: 50px;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        button:hover {
+            background-color: silver;
+        }
+
+        .textboutons {
+            font-size: medium;
+            margin-left: 50px;
+        }
+
+        .divstar {
+            display: none;
+            margin-right: 40px;
+        }
+
+        .star {
+            display: none;
+            width: 30px;
+            height: 30px;
+        }
+
+        .cadenas {
+            width: 20px;
+            height: 30px;
+        }
+
+        canvas {
+            position: fixed;
+            top: 70px;
+            display: none;
+            border: 5px white solid;
+        }
+
+        #end {
+            display: none;
+            justify-content: center;
+            position: relative;
+            top: 150px;
+            border: 3px white solid;
+            width: 500px;
+            height: 300px;
+            color: white;
+            background-color: rgb(88, 3, 145);
+            border-radius: 15px;
+        }
+
+        #text {
+            width: 500px;
+            height: 50px;
+            position: absolute;
+            top: 120px;
+            text-align: center;
+            font-size: xx-large;
+        }
+
+        #text2 {
+            width: 500px;
+            height: 50px;
+            position: absolute;
+            top: 170px;
+            text-align: center;
+            font-size: medium;
+        }
+
+        #boutons {
+            position: absolute;
+            bottom: 40px;
+        }
+
+        #tryagain {
+            height: 30px;
+            width: 100px;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        #next {
+            height: 30px;
+            width: 100px;
+            margin: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #stars {
+            width: 500px;
+            height: 100px;
+            position: absolute;
+            top: 10px;
+            left: 0px;
+            display: flex;
+        }
+
+        #star1 {
+            position: absolute;
+            top: 10px;
+            left: 215px;
+            display: none;
+            width: 70px;
+            height: 70px;
+        }
+
+        #star2 {
+            position: absolute;
+            top: 30px;
+            left: 115px;
+            display: none;
+            width: 70px;
+            height: 70px;
+        }
+
+        #star3 {
+            position: absolute;
+            top: 30px;
+            left: 315px;
+            display: none;
+            width: 70px;
+            height: 70px;
+        }
+
+        #home {
+            position: absolute;
+            right: 140px;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+        }
+
+        #restart {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+            display: none;
+        }
+
+        #infos {
+            position: absolute;
+            right: 60px;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+        }
+
+        #divinfos {
+            position: absolute;
+            top: 220px;
+            width: 400px;
+            height: 230px;
+            display: none;
+            color: white;
+            border: 3px white solid;
+            background-color: rgb(88, 3, 145);
+            border-color: white;
+            border-radius: 15px;
+        }
+
+        #textinfos {
+            position: relative;
+            top: 40px;
+            left: 0px;
+            height: 100px;
+            width: 400px;
+            text-align: center;
+            font-size: large;
+        }
+
+        #cross {
+            position: relative;
+            top: 10px;
+            left: 360px;
+            width: 30px;
+            height: 30px;
+        }
+
+        #boutonniveaux {
+            position: absolute;
+            right: 100px;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+        }
+    </style>
+    <script>
+        //variables globales
+        var c, ctx, level, ceiling, nstars;
+        var x = 10;
+        var y = 540;
+        var radius = 10;
+        var charwidth = 40;
+        var charheight = 50;
+        var floor = 600;
+        var diff_y = 0;
+        var gravity = 0.5;
+        var gravity_grip = 0.5;
+        var detente_saut = 10;
+        var detente_eject = 19;
+        var maxheight = 0;
+        var current_detente = 0;
+        var stars3 = 0;
+        var stars2 = 0;
+        var stars1 = 0;
+        var list_walls = [];
+        var list_floors = [];
+        var list_floorLevel = [];           //attention: ils doivent être push dans l'ordre du plus bas au plus haut
+        var list_under = [];
+        var list_spikes = [];
+        var list_eject = [];
+        var gripping = false;
+        var jumping = false;
+        var movingLeft = false;
+        var movingRight = false;
+        var falling = false;
+        var timer = false;
+        var divinfoscanvas = false;
+        var divinfosend = false;
+        var time = 0;
+        var current_time = 0;
+        var start_time = 0;
+        var movement = "";
+        var indexsprite = 0;
+        var i = 0;
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, c.clientWidth, c.clientHeight);
+        }
+        function $(id) {
+            return document.getElementById(id);
+        }
+        function openniveaux() {
+            $("end").style.display = "none";
+            end("other");
+            $("niveaux").style.display = "block";
+        }
+        function storagecheck() {
+            if (localStorage.length == 0) {
+                list_stars = [0, 0, 0, 0, 0];
+                localStorage.setItem("liststars", JSON.stringify(list_stars));
+                list_time = [0, 0, 0, 0, 0];
+                localStorage.setItem("listtime", JSON.stringify(list_time));
+            }
+            else {
+                list_stars = JSON.parse(localStorage.getItem("liststars"));
+                list_time = JSON.parse(localStorage.getItem("listtime"));
+            }
+        }
+        function check(canvasID) {
+            var l = JSON.parse(localStorage.getItem("liststars"));
+            if (l[parseInt(canvasID[3]) - 2] == 3 || canvasID == "can1") { opencanvas(canvasID); mouvements(); }
+        }
+        function buttoncheck() {
+            for (var i = 1; i < 5; i++) {
+                if (list_stars[i - 1] == 3) {
+                    $("cadenas" + (i + 1)).style.display = "none";
+                    $("divstar" + (i + 1)).style.display = "block";
+                }
+            }
+            for (var i = 0; i < list_stars.length; i++) {
+                for (var j = 0; j < list_stars[i]; j++) {
+                    $("star" + (j + 1) + "niv" + (i + 1)).style.display = "inline";
+                }
+            }
+        }
+        function divinfoscheck() {
+            if ($("end").style.display == "flex") {
+                $("end").style.display = "none";
+                divinfosend = true;
+            }
+            else if (c != null && $(c.id) != "none") {
+                divinfoscanvas = true;
+                end("other");
+            }
+            $("divinfos").style.display = "block";
+        }
+        function opencanvas(canvasID) {
+            $("text").innerHTML = "";
+            $("text2").innerHTML = "";
+            $("end").style.display = "none";
+            $("niveaux").style.display = "none";
+            $(canvasID).style.display = "block";
+            start_time = 0;
+            time = 0;
+            timer = false;
+            floor = 600;
+            movement = "staticright";
+            x = 10;
+            y = 550;
+            switch (canvasID) {
+                case "can1":
+                    level = lev1;
+                    stars3 = 4.50;
+                    stars2 = 5.50;
+                    stars1 = 7.00;
+                    break;
+                case "can2":
+                    level = lev2;
+                    stars3 = 11.00;
+                    stars2 = 12.50;
+                    stars1 = 14.00;
+                    break;
+                case "can3":
+                    level = lev3;
+                    stars3 = 20.00;
+                    stars2 = 21.50;
+                    stars1 = 24.00;
+                    break;
+                case "can4":
+                    level = lev4;
+                    stars3 = 21.00;
+                    stars2 = 23.00;
+                    stars1 = 25.00;
+                    break;
+                case "can5":
+                    level = lev5;
+                    stars3 = 21.00;
+                    stars2 = 23.00;
+                    stars1 = 25.00;
+                    break;
+                default: break;
+            }
+            level();
+            char = new Character();
+            char.draw(x, y, movement);
+            refresh = setInterval(function () { update(); }, 1);
+            spriteinterval = setInterval(function () {
+                i++;
+                sprite_index(movement);
+            }, 100);
+
+        }
+        //objets
+        class Character {
+            draw(x, y, mvmt) {
+                //sprite
+                var img = new Image();
+                switch (mvmt) {
+                    case "leftmvmt":
+                        img.src = "Images/left_walk.png";
+                        ctx.drawImage(img, img.width - indexsprite * 100 - 48, 0, 48, img.height, x, y, charwidth, charheight);
+                        break;
+
+                    case "rightmvmt":
+                        img.src = "Images/right_walk.png";
+                        ctx.drawImage(img, indexsprite * 100, 0, 48, img.height, x, y, charwidth, charheight);
+                        break;
+
+                    case "jumpleft":
+                        img.src = "Images/jump_left.png";
+                        ctx.drawImage(img, img.width - indexsprite * 100 - 48, 0, 48, img.height, x, y, charwidth, charheight);
+                        break;
+                    case "jumpright":
+                        img.src = "Images/jump_right.png";
+                        ctx.drawImage(img, indexsprite * 100, 0, 48, img.height, x, y, charwidth, charheight);
+                        break;
+                    case "fallleft":
+                        img.src = "Images/jump_left.png";
+                        ctx.drawImage(img, img.width - 4 * 100 - 48, 0, 48, img.height, x, y, charwidth, charheight);
+                        break;
+                    case "fallright":
+                        img.src = "Images/jump_right.png";
+                        ctx.drawImage(img, 4 * 100, 0, 48, img.height, x, y, charwidth, charheight);
+                        break;
+                    case "gripleft":
+                        img.src = "Images/wallslide_left.png";
+                        ctx.drawImage(img, x, y, charwidth, charheight);
+                        break;
+                    case "gripright":
+                        img.src = "Images/wallslide_right.png";
+                        ctx.drawImage(img, x, y, charwidth, charheight);
+                        break;
+                    case "staticleft":
+                        img.src = "Images/static_left.png";
+                        ctx.drawImage(img, x, y, charwidth, charheight);
+                        break;
+                    case "staticright":
+                        img.src = "Images/static_right.png";
+                        ctx.drawImage(img, x, y, charwidth, charheight);
+                        break;
+                    default: break;
+
+                }
+
+
+
+            }
+        }
+
+        class Wall {
+            constructor(x, y, w, h) {
+                this.x = x;
+                this.y = y;
+                this.w = w;
+                this.h = h;
+            }
+            draw() {
+                var img = new Image();
+                img.src = "Images/wall.png";
+                ctx.drawImage(img, 0, 0, this.w, this.h, this.x, this.y, this.w, this.h);
+            }
+            distance(x, y) {                                                                      //seulement utile pour le grip
+                var xpos = (x + charwidth + 2 > this.x) && ((x - 2) < (this.x + this.w));
+                var ypos = (y >= this.y && y <= (this.y + this.h));
+                return (xpos && ypos);
+            }
+            leftTouch(x, y) {
+                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 1);
+                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                return (xpos && ypos);
+            }
+            rightTouch(x, y) {
+                var xpos = (this.x + this.w >= x && this.x + this.w - 1 <= x);
+                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                return (xpos && ypos);
+            }
+            under(x, y) {
+                var touch = (x + charwidth > this.x && x < this.x + this.w && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
+                if (touch) {
+                    ceiling = (y - this.y - this.h);
+                }
+                return touch;
+            }
+            changeFloorLevel() {
+                if ((x + charwidth > this.x && x < this.x + this.w) && y + charheight <= this.y) {
+                    floor = this.y;
+                }
+            }
+        }
+        class Floor {
+            constructor(x, y, w, h) {
+                this.x = x;
+                this.y = y;
+                this.w = w;
+                this.h = h;
+            }
+            draw() {
+                var img = new Image();
+                img.src = "Images/floor.png";
+                ctx.drawImage(img, 0, 0, this.w, this.h, this.x, this.y, this.w, this.h);
+            }
+            distance(x, y) {
+                var xpos = (x + charwidth > this.x && x < this.x + this.w);
+                return xpos;
+            }
+            leftTouch(x, y) {
+                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 1);
+                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                return (xpos && ypos);
+            }
+            rightTouch(x, y) {
+                var xpos = (this.x + this.w >= x && this.x + this.w - 1 <= x);
+                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                return (xpos && ypos);
+            }
+            under(x, y) {
+                var touch = (this.distance(x, y) && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
+                if (touch) {
+                    ceiling = (y - this.y - this.h);
+                }
+                return touch;
+            }
+            changeFloorLevel() {
+                if (y < this.y && this.distance(x, y)) {
+                    floor = this.y;
+                }
+            }
+        }
+
+        class Goal {
+            constructor(x, y, w, h) {
+                this.x = x;
+                this.y = y;
+                this.w = w;
+                this.h = h;
+            }
+            draw() {
+                var img = new Image();
+                img.src = "Images/portail.png";
+                ctx.drawImage(img, this.x, this.y, this.w, this.h);
+            }
+            arrived() {                                                                          //peut être changer les distances parce que là il rentre pas dans le portail
+                var pos = (x + charwidth > this.x + 10 && x < this.x + this.w - 10 && y + charheight > this.y + 30 && y < this.y + this.h);
+                return pos;
+            }
+        }
+
+        class Spike {
+            constructor(x, y, number) {
+                this.x = x;
+                this.y = y;
+                this.number = number;
+            }
+            draw() {
+                for (var i = 0; i < this.number; i++) {
+                    var img = new Image();
+                    img.src = "Images/spike.png";
+                    ctx.drawImage(img, this.x + i * 23, this.y - 23, 23, 23);
+                }
+            }
+            distance(x, y) {
+                var xpos = (x + charwidth > this.x + 8 && x < this.x + this.number * 23 - 10);
+                var ypos = (y + charheight > this.y - 15 && y + charheight <= this.y);
+                return (xpos && ypos);
+            }
+        }
+        class ReverseSpike {
+            constructor(x, y, number) {
+                this.x = x;
+                this.y = y;
+                this.number = number;
+            }
+            draw() {
+                for (var i = 0; i < this.number; i++) {
+                    var img = new Image();
+                    img.src = "Images/spike_reversed.png";
+                    ctx.drawImage(img, this.x + i * 23, this.y, 23, 23);
+                }
+            }
+            distance(x, y) {
+                var xpos = (x + charwidth > this.x + 10 && x < this.x + this.number * 23 - 10);
+                var ypos = (y < this.y + 23 && y > this.y);
+                return (xpos && ypos);
+            }
+        }
+        class Ejector {
+            constructor(x, y, w) {
+                this.x = x;
+                this.y = y;
+                this.w = w;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillRect(this.x, this.y, this.w, 5);
+            }
+
+            distance(x, y) {
+                var xpos = (x + charwidth > this.x + 5 && x < this.x + this.w - 5);
+                var ypos = (y + charheight > this.y && y + charheight <= this.y + 5);
+                return (xpos && ypos);
+            }
+
+        }
+        function update() {
+            if (touch_spikes()) {
+                end("Game Over");
+            }
+            else if (goal.arrived() && timer) {
+                end("finish");
+            }
+            else {
+
+                if (timer) {
+                    current_time = new Date().getTime();
+                    time = Math.round((current_time - start_time) / 10) / 100;
+                }
+                if (touch_eject() && !jumping && !falling) {
+                    jumpCounter = 0;
+                    saut(detente_eject);
+                    jumpCounter++;
+                    if (movement == "staticright" || movement == "rightmvmt") {
+                        movement = "jumpright";
+                    }
+                    else if (movement == "staticleft" || movement == "leftmvmt") {
+                        movement = "jumpleft";
+                    }
+                }
+                clearCanvas();
+                level();
+                floorLevel();
+                if (movingRight && !jumping && !gripping && !falling) { movement = "rightmvmt"; }
+                else if (movingLeft && !jumping && !gripping && !falling) { movement = "leftmvmt"; }
+                else if (jumping && (movingLeft || movement == "staticleft" || movement == "gripright")) { movement = "jumpleft"; }
+                else if (jumping && (movingRight || movement == "staticright" || movement == "gripleft")) { movement = "jumpright"; }
+                else if (falling && movingLeft) { movement = "fallleft"; }
+                else if (falling && movingRight) { movement = "fallright"; }
+                char.draw(x, y, movement);
+                if (y + charheight < floor && !jumping && !falling && !gripping) {
+                    falling = true;
+                    fall();
+                }
+            }
+        }
+        function end(how) {
+            $("restart").style.display = "none";
+            jumping = false;
+            movingLeft = false;
+            movingRight = false;
+            falling = false;
+            timer = false;
+            divinfoscanvas = false;
+            i = 0;
+            clearInterval(refresh);
+            clearInterval(spriteinterval);
+            clearCanvas();
+            buttoncheck();
+            c.style.display = "none";
+            if (how == "Game Over") {
+                $("end").style.display = "flex";
+                $("star1").style.display = "none";
+                $("star2").style.display = "none";
+                $("star3").style.display = "none";
+                $("text").innerHTML = "GAME OVER";
+            }
+            else if (how == "finish") {
+                $("end").style.display = "flex";
+                if (list_time[parseInt(c.id[3]) - 1] > time || list_time[parseInt(c.id[3]) - 1] == 0) {
+                    list_time[parseInt(c.id[3]) - 1] = time;
+                    localStorage.setItem("listtime", JSON.stringify(list_time));
+                }
+                $("text").innerHTML = time;
+                $("text2").innerHTML = "BEST TIME: " + list_time[parseInt(c.id[3]) - 1] + "</br>";
+                if (time <= stars3) {
+                    nstars = 3;
+                    $("star1").style.display = "block";
+                    $("star2").style.display = "block";
+                    $("star3").style.display = "block";
+                }
+                else if (time <= stars2) {
+                    nstars = 2;
+                    $("star1").style.display = "block";
+                    $("star2").style.display = "block";
+                    $("star3").style.display = "none";
+                    $("text2").innerHTML += "TIME FOR 3 STARS: " + stars3;
+                }
+                else if (time <= stars1) {
+                    nstars = 1;
+                    $("star1").style.display = "block";
+                    $("star2").style.display = "none";
+                    $("star3").style.display = "none";
+                    $("text2").innerHTML += "TIME FOR 2 STARS: " + stars2;
+                }
+                else {
+                    $("text2").innerHTML += "TIME FOR 1 STAR: " + stars1;
+                }
+                if (nstars >= list_stars[parseInt(c.id[3]) - 1]) {
+                    list_stars[parseInt(c.id[3]) - 1] = nstars;
+                    localStorage.setItem("liststars", JSON.stringify(list_stars));
+                }
+            }
+            if (list_stars[parseInt(c.id[3]) - 1] == 3) {
+                $("next").style.display = "inline-block";
+            }
+            else { $("next").style.display = "none"; }
+        }
+        //organisation
+        function sprite_index(mvmt) {
+            switch (mvmt) {
+                case "leftmvmt":
+                case "rightmvmt":
+                    indexsprite = i % 6;
+                    break;
+                case "jumpleft":
+                case "jumpright":
+                    if ((floor - (y + charheight)) < (maxheight / 2)) {
+                        indexsprite = (diff_y < 0) ? 1 : 5;
+                    }
+                    else if ((floor - (y + charheight)) < (3 * maxheight / 4)) {
+                        indexsprite = (diff_y < 0) ? 2 : 4;
+                    }
+                    else if ((floor - (y + charheight)) > (3 * maxheight / 4)) {
+                        indexsprite = 3;
+                    }
+                    break;
+                case "fallleft":
+
+                    break;
+                case "fallright":
+
+                    break;
+                case "gripleft":
+                case "gripright":
+                case "staticleft":
+                case "staticright":
+                    indexsprite = 0;
+                    break;
+                default: break;
+
+            }
+        }
+        function touch_right() {
+            var counter = 0;
+            for (var i = 0; i < list_walls.length; i++) {
+                if (list_walls[i].rightTouch(x, y)) {
+                    counter++;
+                }
+            }
+            for (var i = 0; i < list_floors.length; i++) {
+                if (list_floors[i].rightTouch(x, y)) {
+                    counter++;
+                }
+            }
+            return (counter > 0);
+
+        }
+        function touch_left() {
+            var counter = 0;
+            for (var i = 0; i < list_walls.length; i++) {
+                if (list_walls[i].leftTouch(x, y)) {
+                    counter++;
+                }
+            }
+            for (var i = 0; i < list_floors.length; i++) {
+                if (list_floors[i].leftTouch(x, y)) {
+                    counter++;
+                }
+            }
+            return (counter > 0);
+        }
+        function floorLevel() {
+            for (var i = 0; i < list_floorLevel.length; i++) {
+                list_floorLevel[i].changeFloorLevel();
+            }
+        }
+        function touch_under() {
+            var counter = 0;
+            for (var i = 0; i < list_under.length; i++) {
+                if (list_under[i].under(x, y)) {
+                    counter++;
+                }
+            }
+            return (counter > 0);
+        }
+        function touch_distance() {
+            var counter = 0;
+            for (var i = 0; i < list_walls.length; i++) {
+                if (list_walls[i].distance(x, y)) {
+                    counter++;
+                }
+            }
+            return (counter > 0);
+        }
+        function touch_spikes() {
+            var counter = 0;
+            for (var i = 0; i < list_spikes.length; i++) {
+                if (list_spikes[i].distance(x, y)) {
+                    counter++;
+                }
+            }
+            return (counter > 0);
+        }
+        function touch_eject() {
+            var counter = 0;
+            for (var i = 0; i < list_eject.length; i++) {
+                if (list_eject[i].distance(x, y)) {
+                    counter++;
+                }
+            }
+            return (counter > 0);
+        }
+
+        //mouvements
+        function gauche() {
+            if ((x > 0) && !touch_right()) {
+                x -= 2;
+                if (movingLeft) {
+                    requestAnimationFrame(gauche);
+                }
+            }
+        }
+        function droite() {
+            if ((x + charwidth < c.clientWidth) && !touch_left()) {
+                x += 2;
+                if (movingRight) {
+                    requestAnimationFrame(droite);
+                }
+            }
+        }
+
+        function saut(detente) {
+            if (!jumping && jumpCounter == 0) {
+                diff_y = -detente;
+                jumping = true;
+                var test = diff_y;
+                var h = 0;
+                while (test < 0) {
+                    h += test;
+                    test += gravity;
+                }
+                maxheight = -h;
+                requestAnimationFrame(saut);
+            }
+            else if (jumping) {
+                if (touch_under()) {
+                    if (movement == "jumpright") { movement = "fallright"; }
+                    else if (movement == "jumpleft") { movement = "fallleft"; }
+                    y -= ceiling;
+                    jumping = false;
+                    diff_y = 0;
+                }
+                else if (touch_distance() && diff_y > 0) {
+                    jumping = false;
+                    gripping = true;
+                    grip();
+                }
+                else {
+                    y += diff_y;
+                    diff_y += gravity;
+                    if (y + charheight >= floor) {
+                        y = floor - charheight;
+                        if (movement == "jumpright") { movement = "staticright"; }
+                        else if (movement == "jumpleft") { movement = "staticleft"; }
+                        jumping = false;
+                        diff_y = 0;
+                    }
+                    else {
+                        requestAnimationFrame(saut);
+                    }
+                }
+            }
+        }
+        function fall() {
+            if (touch_distance()) {
+                if (movement == "jumpright" || movement == "rightmvmt" || movement == "gripleft") {
+                    movement = "fallright";
+                }
+                else if (movement == "jumpleft" || movement == "leftmvmt" || movement == "gripright") {
+                    movement = "fallleft";
+                }
+                falling = false;
+                gripping = true;
+                grip();
+            }
+            else {
+                y += diff_y;
+                diff_y += gravity;
+                if (y + charheight >= floor) {
+                    y = floor - charheight;
+                    if (movement == "fallright") { movement = "staticright"; }
+                    else if (movement == "fallleft") { movement = "staticleft"; }
+                    falling = false;
+                    diff_y = 0;
+                }
+                if (falling) {
+                    requestAnimationFrame(fall);
+                }
+            }
+        }
+
+        function grip() {
+            falling = false;
+            y += gravity_grip;
+            if (y + charheight + gravity_grip >= floor) {
+                if (movement == "gripleft") { movement = "staticright"; }
+                else if (movement == "gripright") { movement = "staticleft"; }
+                gripping = false;
+            }
+            else if (!touch_distance()) {
+                gripping = false;
+                if (movement == "gripleft") { movement = "fallright"; }
+                else if (movement == "gripright") { movement = "fallleft"; }
+            }
+            if (gripping) {
+                if (touch_right() && !jumping) {
+                    movement = "gripright";
+                }
+                else if (touch_left() && !jumping) {
+                    movement = "gripleft";
+                }
+                requestAnimationFrame(grip);
+            }
+        }
+        function mouvements() {
+            document.addEventListener("keydown", function () {
+                if (c.style.display != "none") {
+                    if (event.key == " " && !jumping && !falling && !touch_eject()) {
+                        jumpCounter = 0;
+                        saut(detente_saut);
+                        jumpCounter++;
+                        level;
+                        if (!timer) {
+                            timer = true;
+                            start_time = new Date().getTime();
+                            $("restart").style.display = "block";
+                        }
+                        if (movement == "staticright" || movement == "rightmvmt") {
+                            movement = "jumpright";
+                        }
+                        else if (movement == "staticleft" || movement == "leftmvmt") {
+                            movement = "jumpleft";
+                        }
+                    }
+                    else if (event.key == "ArrowLeft" && !movingLeft) {
+                        movingLeft = true;
+                        gauche();
+                        if (!timer) {
+                            timer = true;
+                            start_time = new Date().getTime();
+                            $("restart").style.display = "block";
+                        }
+                    }
+                    else if (event.key == "ArrowRight" && !movingRight) {
+                        movingRight = true;
+                        droite();
+                        if (!timer) {
+                            timer = true;
+                            start_time = new Date().getTime();
+                            $("restart").style.display = "block";
+                        }
+                    }
+                }
+            });
+            document.addEventListener("keyup", function () {
+                if (c.style.display != "none") {
+                    if (event.key == "ArrowLeft") {
+                        movingLeft = false;
+                        if (jumping) { movement = "jumpleft"; }
+                        else if (falling) { movement = "fallleft"; }
+                        else { movement = "staticleft"; }
+                    }
+                    else if (event.key == "ArrowRight") {
+                        movingRight = false;
+                        if (jumping) { movement = "jumpright"; }
+                        else if (falling) { movement = "fallright"; }
+                        else { movement = "staticright"; }
+
+                    }
+                }
+            });
+        }
+
+        //niveaux
+        function lev1() {
+            c = $("can1");
+            ctx = c.getContext("2d");
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.strokeText(time, 10, 40);
+            ctx.fill();
+            goal = new Goal(300, 500, 70, 100);
+            w1 = new Wall(100, 500, 40, 100);
+            w2 = new Wall(250, 500, 40, 100);
+            w3 = new Wall(750, 300, 40, 200);
+            w4 = new Wall(850, 380, 40, 220);
+            f0 = new Floor(0, 600, 1200, 10);
+            f1 = new Floor(100, 500, 190, 30);
+            f3 = new Floor(30, 380, 300, 30);
+            f4 = new Floor(500, 450, 150, 30);
+            s1 = new Spike(140, 380, 3);
+            s2 = new ReverseSpike(40, 410, 3);
+            e1 = new Ejector(650, 595);
+            e2 = new Ejector(500, 445);
+            list_walls = [w1, w2, w3, w4];
+            list_floors = [f1, f3, f4];
+            list_floorLevel = [f0, f1, w1, w2, f4, f3, w4, w3];
+            list_under = [f1, f3, f4, w1, w2, w3, w4];
+            list_spikes = [s1, s2];
+            list_eject = [e1, e2];
+            e1.draw();
+            e2.draw();
+            goal.draw();
+            w1.draw();
+            w2.draw();
+            w3.draw();
+            w4.draw();
+            f1.draw();
+            f3.draw();
+            f4.draw();
+            s1.draw();
+            s2.draw();
+        }
+        function lev2() {
+            c = $("can2");
+            ctx = c.getContext("2d");
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.strokeText(time, 10, 40);
+            ctx.fill();
+            goal = new Goal(1050, 520, 60, 80);
+            f0 = new Floor(0, c.height, c.width, 5);
+            f1 = new Floor(450, 550, 100, 30);
+            f2 = new Floor(750, 200, 150, 30);
+            f3 = new Floor(750, 350, 150, 30);
+            f4 = new Floor(950, 350, 230, 30);
+            w1 = new Wall(650, 400, 30, 100);
+            w2 = new Wall(520, 340, 30, 100);
+            w3 = new Wall(650, 260, 30, 100);
+            w4 = new Wall(520, 200, 30, 100);
+            s1 = new Spike(200, 600, 2);
+            s2 = new Spike(285, 600, 5);
+            s3 = new Spike(567, 600, 16);
+            s4 = new Spike(762, 350, 6);
+            s5 = new Spike(950, 350, 10);
+            e1 = new Ejector(245, 595, 40);
+            elements = [goal, f1, f2, f3, f4, s1, s2, s3, s4, s5, e1, w1, w2, w3, w4];
+            elements.forEach(e => {
+                e.draw();
+            });
+            list_walls = [w1, w2, w3, w4];
+            list_under = [f1, f2, f3, f4, w1, w2, w3, w4];
+            list_floorLevel = [f0, f1, w1, f3, f4, w2, w3, f2, w4];
+            list_floors = [f0, f1, f2, f3];
+            list_spikes = [s1, s2, s3, s4, s5];
+            list_eject = [e1];
+        }
+        function lev5() { //Co-designed with Justine Dubied
+            c = $("can5");
+            ctx = c.getContext("2d");
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.strokeText(time, 10, 40);
+            ctx.fill();
+            goal = new Goal(1030, 520, 60, 80);
+            e1 = new Ejector(180, 595, 40);
+            e2 = new Ejector(449, 395, 40);
+            e3 = new Ejector(945, 565, 45);
+            s1 = new Spike(220, 600, 14);
+            s2 = new ReverseSpike(180, 280, 2);
+            s3 = new ReverseSpike(230, 210, 4);
+            s4 = new Spike(380, 400, 3);
+            s5 = new Spike(489, 400, 3);
+            s6 = new Spike(610, 170, 2);
+            s7 = new Spike(723, 210, 2);
+            s8 = new Spike(830, 170, 2);
+            s9 = new Spike(960, 200, 1);
+            s10 = new Spike(1077, 200, 1);
+            s11 = new Spike(1172, 220, 1);
+            s12 = new Spike(863, 390, 2);
+            s13 = new Spike(805, 350, 1);
+            s14 = new Spike(613, 370, 1);
+            s15 = new Spike(690, 570, 1);
+            s16 = new Spike(1085, 600, 5);
+            s17 = new Spike(646, 600, 2);
+            s18 = new Spike(230, 180, 2);
+            s19 = new ReverseSpike(930, 380, 7);
+            w1 = new Wall(180, 230, 46, 50);
+            w2 = new Wall(1170, 220, 30, 150);
+            w3 = new Wall(610, 370, 30, 180);
+            f0 = new Floor(0, c.height, c.width, 5);
+            f1 = new Floor(0, 350, 100, 30);
+            f2 = new Floor(0, 200, 100, 30);
+            f3 = new Floor(180, 180, 160, 30);
+            f4 = new Floor(380, 400, 178, 30);
+            f5 = new Floor(560, 170, 150, 30);
+            f6 = new Floor(780, 170, 150, 30);
+            f7 = new Floor(720, 210, 50, 30);
+            f8 = new Floor(960, 200, 140, 30);
+            f9 = new Floor(920, 350, 180, 30);
+            f10 = new Floor(860, 390, 50, 30);
+            f11 = new Floor(730, 350, 120, 30);
+            f12 = new Floor(690, 570, 300, 30);
+            fn = new Floor(0, 0, c.width, 1);
+
+            elements = [goal, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, e1, e2, e3, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, w1, w2, w3];
+            elements.forEach(e => {
+                e.draw();
+            });
+            list_walls = [w1, w2, w3];
+            list_under = [f1, f2, f3, f4, f10, f9, f11, f5, f6, f7, f8, f9, f10, f11, f12, w1, w2, w3, fn];
+            list_floorLevel = [f0, f12, f4, f10, f1, w3, f9, f11, w1, f2, w2, f8, f7, f3, f5, f6];
+            list_floors = [f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, fn];
+            list_spikes = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19];
+            list_eject = [e1, e2, e3];
+        }
+        function lev3() { //Co-designed with Simon Denys
+            c = $("can3");
+            ctx = c.getContext("2d");
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.strokeText(time, 10, 40);
+            ctx.fill();
+            goal = new Goal(650, 25, 60, 80);
+            f0 = new Floor(0, c.height, c.width, 5);
+            f1 = new Floor(200, 530, 400, 30);
+            f2 = new Floor(650, 530, 350, 30);
+            f3 = new Floor(100, 320, 850, 30);
+            f4 = new Floor(150, 110, 600, 30);
+            f5 = new Floor(0, 0, c.width, 1);
+            w1 = new Wall(750, 270, 30, 50);
+            w2 = new Wall(300, 70, 30, 40);
+            s1 = new Spike(210, 600, 36);
+            s2 = new Spike(1090, 600, 4);
+            s3 = new Spike(320, 530, 2);
+            s4 = new Spike(400, 530, 1);
+            s5 = new Spike(980, 530, 1);
+            s6 = new ReverseSpike(420, 350, 5);
+            s7 = new Spike(705, 320, 2);
+            s8 = new ReverseSpike(330, 140, 5);
+            s9 = new Spike(280, 110, 1);
+            s10 = new Spike(330, 110, 1);
+            e1 = new Ejector(1040, 595, 50);
+            e2 = new Ejector(420, 525, 30);
+            e3 = new Ejector(380, 315, 40);
+            e4 = new Ejector(100, 315, 40);
+            var elements = [goal, f1, f2, f3, f4, w1, w2, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, e1, e2, e3, e4];
+            elements.forEach(e => {
+                e.draw();
+            });
+            list_walls = [w1, w2];
+            list_under = [f1, f2, f3, f4, f5];
+            list_floorLevel = [f0, f1, f2, f3, w1, f4, w2];
+            list_floors = [f0, f1, f2, f3, f4, f5];
+            list_spikes = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10];
+            list_eject = [e1, e2, e3, e4];
+        }
+        function lev4() { //Co-designed with Céline Wenger
+            c = $("can4");
+            ctx = c.getContext("2d");
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.strokeText(time, 10, 40);
+            ctx.fill();
+            goal = new Goal(450, 40, 60, 80);
+            f0 = new Floor(0, c.height, c.width, 5);
+            f1 = new Floor(100, 570, 150, 30);
+            f2 = new Floor(300, 520, 150, 30);
+            f3 = new Floor(500, 500, 150, 30);
+            f4 = new Floor(700, 480, 150, 30);
+            f5 = new Floor(900, 420, 150, 30);
+            f6 = new Floor(650, 270, 380, 30);
+            f7 = new Floor(400, 310, 150, 30);
+            f8 = new Floor(0, 380, 300, 30);
+            f9 = new Floor(60, 180, 200, 30);
+            f10 = new Floor(320, 120, 200, 30);
+            f11 = new Floor(0, 0, c.width, 1);
+            w1 = new Wall(1120, 300, 30, 120);
+            w2 = new Wall(700, 230, 30, 40);
+            s1 = new Spike(1050, 600, 6);
+            s2 = new Spike(150, 570, 2);
+            s3 = new Spike(340, 520, 2);
+            s4 = new Spike(560, 500, 2);
+            s5 = new Spike(750, 480, 1);
+            s6 = new Spike(1125, 300, 1);
+            s7 = new ReverseSpike(760, 300, 5);
+            s8 = new Spike(900, 270, 2);
+            s9 = new Spike(678, 270, 2);
+            s10 = new Spike(450, 310, 2);
+            s11 = new Spike(130, 380, 2);
+            s12 = new Spike(50, 380, 2);
+            s13 = new Spike(110, 180, 1);
+            s14 = new ReverseSpike(130, 0, 5);
+            e1 = new Ejector(770, 475, 30);
+            e2 = new Ejector(0, 375, 50);
+            e3 = new Ejector(130, 175, 30);
+            var elements = [goal, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, e1, e2, e3, w1, w2];
+            elements.forEach(e => {
+                e.draw();
+            });
+            list_walls = [w1, w2];
+            list_under = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, w1];
+            list_floorLevel = [f0, f1, f2, f3, f4, f5, f8, f7, w1, f6, w2, f9, f10];
+            list_floors = [f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11];
+            list_spikes = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14];
+            list_eject = [e1, e2, e3];
+        }
+
+    </script>
+</head>
+
+<body onload="storagecheck(); buttoncheck();">
+    <img src="Images/background.avif" alt="" style="width: 100%; height: 100%; position: absolute; top:0px; left:0px;">
+    <div id="niveaux">
+        <button id="b1" value="can1" onclick="check(this.value)" class="boutonsniveaux">
+            <span class="textboutons">Level 1</span>
+            <div class="divstar" id="divstar1" style="display: block;">
+                <img src="Images/star.png" class="star" id="star1niv1">
+                <img src="Images/star.png" class="star" id="star2niv1">
+                <img src="Images/star.png" class="star" id="star3niv1">
+            </div>
+
+        </button> </br>
+        <button id="b2" value="can2" onclick="check(this.value)" class="boutonsniveaux">
+            <span class="textboutons">Level 2</span>
+            <img src="Images/cadenas.png" class="cadenas" id="cadenas2">
+            <div class="divstar" id="divstar2">
+                <img src="Images/star.png" class="star" id="star1niv2">
+                <img src="Images/star.png" class="star" id="star2niv2">
+                <img src="Images/star.png" class="star" id="star3niv2">
+            </div>
+        </button> </br>
+        <button id="b3" value="can3" onclick="check(this.value)" class="boutonsniveaux">
+            <span class="textboutons">Level 3</span>
+            <img src="Images/cadenas.png" class="cadenas" id="cadenas3">
+            <div class="divstar" id="divstar3">
+                <img src="Images/star.png" class="star" id="star1niv3">
+                <img src="Images/star.png" class="star" id="star2niv3">
+                <img src="Images/star.png" class="star" id="star3niv3">
+            </div>
+        </button> </br>
+        <button id="b4" value="can4" onclick="check(this.value)" class="boutonsniveaux">
+            <span class="textboutons">Level 4</span>
+            <img src="Images/cadenas.png" class="cadenas" id="cadenas4">
+            <div class="divstar" id="divstar4">
+                <img src="Images/star.png" class="star" id="star1niv4">
+                <img src="Images/star.png" class="star" id="star2niv4">
+                <img src="Images/star.png" class="star" id="star3niv4">
+            </div>
+        </button> </br>
+        <button id="b5" value="can5" onclick="check(this.value)" class="boutonsniveaux">
+            <span class="textboutons">Level 5</span>
+            <img src="Images/cadenas.png" class="cadenas" id="cadenas5">
+            <div class="divstar" id="divstar5">
+                <img src="Images/star.png" class="star" id="star1niv5">
+                <img src="Images/star.png" class="star" id="star2niv5">
+                <img src="Images/star.png" class="star" id="star3niv5">
+            </div>
+        </button> </br>
+        <h2>Obtain 3 stars to unlock next level!</h2>
+    </div>
+    <a href="index.html"><img src="Images/home.png" id="home"></a>
+    <img src="Images/restart.png" id="restart" onclick="end('other');check(c.id);this.style.display='none';">
+    <img src="Images/infos.png" id="infos" onclick="divinfoscheck(); ">
+    <img src="Images/niveaux.png" id="boutonniveaux" onclick="openniveaux();">
+    <div id="divinfos">
+        <img src="Images/cross.png" id="cross"
+            onclick="$('divinfos').style.display='none'; if(divinfoscanvas){check(c.id); divinfoscanvas=false;}; if(divinfosend){$('end').style.display='flex'; divinfosend=false;}">
+        <div id="textinfos">
+            Use ArrowLeft and ArrowRight to Run </br></br>
+            Use SpaceBar to Jump </br></br>
+            Use Walls to Grip
+        </div>
+    </div>
+    <div id="end">
+        <div id="stars">
+            <img src="Images/star.png" id="star2">
+            <img src="Images/star.png" id="star1">
+            <img src="Images/star.png" id="star3">
+        </div>
+        <div id="text"></div>
+        <div id="text2"></div>
+        <div id="boutons">
+            <button id="tryagain" onclick="check(c.id)">TRY AGAIN</button> <button id="next"
+                onclick="nextlevel='can'+(parseInt(c.id[3])+1);check(nextlevel)">NEXT LEVEL</button>
+        </div>
+    </div>
+
+    <canvas id="can1" height="600px" width="1200px;"></canvas>
+    <canvas id="can2" height="600px" width="1200px;"></canvas>
+    <canvas id="can3" height="600px" width="1200px;"></canvas>
+    <canvas id="can4" height="600px" width="1200px;"></canvas>
+    <canvas id="can5" height="600px" width="1200px;"></canvas>
+</body>
+
+</html>
