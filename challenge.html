@@ -244,6 +244,8 @@
         var timer = false;
         var divinfoscanvas = false;
         var divinfosend = false;
+        var game = false;
+        var lastTime = 0;
         var time = 0;
         var current_time = 0;
         var start_time = 0;
@@ -306,6 +308,7 @@
             $("divinfos").style.display = "block";
         }
         function opencanvas(canvasID) {
+            game = true;
             $("text").innerHTML = "";
             $("text2").innerHTML = "";
             $("end").style.display = "none";
@@ -354,7 +357,18 @@
             level();
             char = new Character();
             char.draw(x, y, movement);
-            refresh = setInterval(function () { update(); }, 1);
+            function gameLoop(timestamp) { //last minute AI
+                if (lastTime == 0) {
+                    lastTime = timestamp;
+                }
+                delta = (timestamp - lastTime) / 1000;
+                lastTime = timestamp;
+                if (game) {
+                    update();
+                    AnimGame = requestAnimationFrame(gameLoop);
+                }
+            }
+            AnimGame = requestAnimationFrame(gameLoop);
             spriteinterval = setInterval(function () {
                 i++;
                 sprite_index(movement);
@@ -622,11 +636,12 @@
             gripping = false;
             timer = false;
             divinfoscanvas = false;
+            game = false;
             cancelAnimationFrame(AnimSaut);  //partially AI
             cancelAnimationFrame(AnimFall);
             cancelAnimationFrame(AnimGrip);
+            cancelAnimationFrame(AnimGame);
             i = 0;
-            clearInterval(refresh);
             clearInterval(spriteinterval);
             clearCanvas();
             c.style.display = "none";
@@ -788,7 +803,7 @@
         //mouvements
         function gauche() {
             if ((x > 0) && !touch_right()) {
-                x -= 2;
+                x -= 118 * delta;
                 if (movingLeft) {
                     requestAnimationFrame(gauche);
                 }
@@ -796,7 +811,7 @@
         }
         function droite() {
             if ((x + charwidth < c.clientWidth) && !touch_left()) {
-                x += 2;
+                x += 118 * delta;
                 if (movingRight) {
                     requestAnimationFrame(droite);
                 }
@@ -830,7 +845,7 @@
                     grip();
                 }
                 else {
-                    y += diff_y;
+                    y += diff_y * 60 * delta;
                     diff_y += gravity;
                     if (y + charheight >= floor) {
                         y = floor - charheight;
@@ -858,7 +873,7 @@
                 grip();
             }
             else {
-                y += diff_y;
+                y += diff_y * (60 * delta);
                 diff_y += gravity;
                 if (y + charheight >= floor) {
                     y = floor - charheight;
@@ -875,7 +890,7 @@
 
         function grip() {
             falling = false;
-            y += gravity_grip;
+            y += gravity_grip * (60 * delta);
             if (y + charheight + gravity_grip >= floor) {
                 if (movement == "gripleft") { movement = "staticright"; }
                 else if (movement == "gripright") { movement = "staticleft"; }
