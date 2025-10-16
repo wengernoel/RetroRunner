@@ -224,7 +224,7 @@
         var diff_y = 0;
         var gravity = 0.5;
         var gravity_grip = 0.4;
-        var detente_saut = 10;
+        var detente_saut = 9.8;
         var detente_eject = 19;
         var maxheight = 0;
         var stars3 = 0;
@@ -361,7 +361,7 @@
                 if (lastTime == 0) {
                     lastTime = timestamp;
                 }
-                delta = (timestamp - lastTime) / 1000;
+                delta = (timestamp - lastTime) / 100;
                 lastTime = timestamp;
                 if (game) {
                     update();
@@ -450,17 +450,17 @@
                 return (xpos && ypos);
             }
             leftTouch(x, y) {
-                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 1);
+                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 2);
                 var ypos = (y + charheight > this.y && y < (this.y + this.h));
                 return (xpos && ypos);
             }
             rightTouch(x, y) {
-                var xpos = (this.x + this.w >= x && this.x + this.w - 1 <= x);
+                var xpos = (this.x + this.w >= x && this.x + this.w - 2 <= x);
                 var ypos = (y + charheight > this.y && y < (this.y + this.h));
                 return (xpos && ypos);
             }
             under(x, y) {
-                var touch = (x + charwidth > this.x && x < this.x + this.w && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
+                var touch = (x + charwidth -2 > this.x && x+2  < this.x + this.w && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
                 if (touch) {
                     ceiling = (y - this.y - this.h);
                 }
@@ -485,21 +485,21 @@
                 ctx.drawImage(img, 0, 0, this.w, this.h, this.x, this.y, this.w, this.h);
             }
             distance(x, y) {
-                var xpos = (x + charwidth > this.x && x < this.x + this.w);
+                var xpos = (x + charwidth -2> this.x && x +2 < this.x + this.w);
                 return xpos;
             }
             leftTouch(x, y) {
-                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 1);
+                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 2);
                 var ypos = (y + charheight > this.y && y < (this.y + this.h));
                 return (xpos && ypos);
             }
             rightTouch(x, y) {
-                var xpos = (this.x + this.w >= x && this.x + this.w - 1 <= x);
+                var xpos = (this.x + this.w >= x && this.x + this.w - 2 <= x);
                 var ypos = (y + charheight > this.y && y < (this.y + this.h));
                 return (xpos && ypos);
             }
             under(x, y) {
-                var touch = (this.distance(x, y) && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
+                var touch = (this.distance(x, y) && y >= this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
                 if (touch) {
                     ceiling = (y - this.y - this.h);
                 }
@@ -540,7 +540,7 @@
                 for (var i = 0; i < this.number; i++) {
                     var img = new Image();
                     img.src = "Images/spike.png";
-                    ctx.drawImage(img, this.x + i * 23, this.y - 23, 23, 23);
+                    ctx.drawImage(img, this.x + i * 22, this.y - 22, 22, 22);
                 }
             }
             distance(x, y) {
@@ -559,11 +559,11 @@
                 for (var i = 0; i < this.number; i++) {
                     var img = new Image();
                     img.src = "Images/spike_reversed.png";
-                    ctx.drawImage(img, this.x + i * 23, this.y, 23, 23);
+                    ctx.drawImage(img, this.x + i * 22, this.y, 22, 22);
                 }
             }
             distance(x, y) {
-                var xpos = (x + charwidth > this.x + 10 && x < this.x + this.number * 23 - 10);
+                var xpos = (x + charwidth > this.x + 10 && x < this.x + this.number * 22 - 10);
                 var ypos = (y < this.y + 23 && y > this.y);
                 return (xpos && ypos);
             }
@@ -803,7 +803,7 @@
         //mouvements
         function gauche() {
             if ((x > 0) && !touch_right()) {
-                x -= 118 * delta;
+                x -= 12 * delta;                  //120px par seconde/10
                 if (movingLeft) {
                     requestAnimationFrame(gauche);
                 }
@@ -811,7 +811,7 @@
         }
         function droite() {
             if ((x + charwidth < c.clientWidth) && !touch_left()) {
-                x += 118 * delta;
+                x += 12 * delta;
                 if (movingRight) {
                     requestAnimationFrame(droite);
                 }
@@ -820,7 +820,7 @@
 
         function saut(detente) {   //partially AI
             if (!jumping && jumpCounter == 0) {
-                diff_y = -detente;
+                diff_y = -detente * (6*delta);
                 jumping = true;
                 var test = diff_y;
                 var h = 0;
@@ -845,8 +845,8 @@
                     grip();
                 }
                 else {
-                    y += diff_y * 60 * delta;
-                    diff_y += gravity;
+                    y += diff_y * 6 * delta;
+                    diff_y += gravity *(6*delta);
                     if (y + charheight >= floor) {
                         y = floor - charheight;
                         if (movement == "jumpright") { movement = "staticright"; }
@@ -873,8 +873,8 @@
                 grip();
             }
             else {
-                y += diff_y * (60 * delta);
-                diff_y += gravity;
+                y += diff_y * (6 * delta);
+                diff_y += gravity*(6 * delta);
                 if (y + charheight >= floor) {
                     y = floor - charheight;
                     if (movement == "fallright") { movement = "staticright"; }
@@ -890,7 +890,7 @@
 
         function grip() {
             falling = false;
-            y += gravity_grip * (60 * delta);
+            y += gravity_grip * (6 * delta);
             if (y + charheight + gravity_grip >= floor) {
                 if (movement == "gripleft") { movement = "staticright"; }
                 else if (movement == "gripright") { movement = "staticleft"; }
@@ -980,8 +980,8 @@
             ctx.fill();
             goal = new Goal(120, 20, 60, 80);
             f0 = new Floor(0, c.height, c.width, 5);
-            f1 = new Floor(300, 500, 250, 30);
-            f2 = new Floor(850, 500, 200, 30);
+            f1 = new Floor(300, 510, 250, 30);
+            f2 = new Floor(850, 510, 200, 30);
             f3 = new Floor(800, 200, 230, 30);
             f4 = new Floor(500, 310, 200, 30);
             f5 = new Floor(290, 310, 150, 30);
@@ -991,13 +991,13 @@
             s2 = new Spike(290, 600, 15);
             s3 = new Spike(700, 600, 2);
             s4 = new Spike(855, 600, 15);
-            s5 = new Spike(402, 500, 2);
-            s6 = new Spike(964, 500, 2);
+            s5 = new Spike(402, 510, 2);
+            s6 = new Spike(964, 510, 2);
             s7 = new ReverseSpike(984, 230, 2);
             s8 = new Spike(892, 200, 2);
             s9 = new Spike(577, 310, 2);
             s10 = new Spike(330, 310, 2);
-            e1 = new Ejector(1010, 495, 40);
+            e1 = new Ejector(1010, 505, 40);
             e2 = new Ejector(290, 305, 40);
             elements = [goal, f1, f2, f3, f4, f5, f6, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, e1, e2];
             elements.forEach(e => {
@@ -1023,7 +1023,7 @@
             f0 = new Floor(0, c.height, c.width, 5);
             f1 = new Floor(450, 550, 100, 30);
             f2 = new Floor(750, 200, 150, 30);
-            f3 = new Floor(750, 350, 150, 30);
+            f3 = new Floor(746, 350, 154, 30);
             f4 = new Floor(950, 350, 230, 30);
             w1 = new Wall(650, 400, 30, 100);
             w2 = new Wall(520, 340, 30, 100);
@@ -1031,8 +1031,8 @@
             w4 = new Wall(520, 200, 30, 100);
             s1 = new Spike(200, 600, 2);
             s2 = new Spike(285, 600, 5);
-            s3 = new Spike(567, 600, 16);
-            s4 = new Spike(762, 350, 6);
+            s3 = new Spike(571, 600, 16);
+            s4 = new Spike(746, 350, 7);
             s5 = new Spike(950, 350, 10);
             e1 = new Ejector(245, 595, 40);
             elements = [goal, f1, f2, f3, f4, s1, s2, s3, s4, s5, e1, w1, w2, w3, w4];
@@ -1073,7 +1073,7 @@
             s8 = new ReverseSpike(330, 140, 5);
             s9 = new Spike(280, 110, 1);
             s10 = new Spike(330, 110, 1);
-            e1 = new Ejector(1040, 595, 50);
+            e1 = new Ejector(1000, 595, 90);
             e2 = new Ejector(420, 525, 30);
             e3 = new Ejector(380, 315, 40);
             e4 = new Ejector(100, 315, 40);
@@ -1099,7 +1099,7 @@
             goal = new Goal(450, 40, 60, 80);
             f0 = new Floor(0, c.height, c.width, 5);
             f1 = new Floor(100, 570, 150, 30);
-            f2 = new Floor(300, 520, 150, 30);
+            f2 = new Floor(300, 515, 150, 30);
             f3 = new Floor(500, 500, 150, 30);
             f4 = new Floor(700, 480, 150, 30);
             f5 = new Floor(900, 420, 150, 30);
@@ -1109,14 +1109,14 @@
             f9 = new Floor(60, 180, 200, 30);
             f10 = new Floor(320, 120, 200, 30);
             f11 = new Floor(0, 0, c.width, 1);
-            w1 = new Wall(1120, 300, 30, 120);
+            w1 = new Wall(1120, 280, 30, 140);
             w2 = new Wall(700, 230, 30, 40);
             s1 = new Spike(1050, 600, 6);
             s2 = new Spike(150, 570, 2);
-            s3 = new Spike(340, 520, 2);
+            s3 = new Spike(340, 515, 2);
             s4 = new Spike(560, 500, 2);
             s5 = new Spike(750, 480, 1);
-            s6 = new Spike(1125, 300, 1);
+            s6 = new Spike(1125, 280, 1);
             s7 = new ReverseSpike(760, 300, 5);
             s8 = new Spike(900, 270, 2);
             s9 = new Spike(678, 270, 2);
