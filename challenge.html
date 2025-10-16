@@ -357,11 +357,12 @@
             level();
             char = new Character();
             char.draw(x, y, movement);
-            function gameLoop(timestamp) { //last minute AI
+            function gameLoop(timestamp) { //AI idea but understood
                 if (lastTime == 0) {
                     lastTime = timestamp;
                 }
                 delta = (timestamp - lastTime) / 1000;
+                delta = Math.min(delta, 0.02);          //limite delta au cas où une frame est beaucoup trop longue. réduit les risques de tunnelling
                 lastTime = timestamp;
                 if (game) {
                     update();
@@ -445,29 +446,29 @@
                 ctx.drawImage(img, 0, 0, this.w, this.h, this.x, this.y, this.w, this.h);
             }
             distance(x, y) {                                                                      //seulement utile pour le grip
-                var xpos = (x + charwidth + 2 > this.x) && ((x - 2) < (this.x + this.w));
+                var xpos = ((x + charwidth > this.x) && x < (this.x + this.w));
                 var ypos = (y >= this.y && y <= (this.y + this.h));
                 return (xpos && ypos);
             }
             leftTouch(x, y) {
-                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 2);
-                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 3);
+                var ypos = (y + charheight + 3 > this.y && y - 3 < (this.y + this.h));
                 return (xpos && ypos);
             }
             rightTouch(x, y) {
-                var xpos = (this.x + this.w >= x && this.x + this.w - 2 <= x);
-                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                var xpos = (this.x + this.w >= x && this.x + this.w - 3 <= x);
+                var ypos = (y + charheight + 3 > this.y && y - 3 < (this.y + this.h));
                 return (xpos && ypos);
             }
             under(x, y) {
-                var touch = (x + charwidth -2 > this.x && x+2  < this.x + this.w && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
+                var touch = (x + charwidth - 3 > this.x && x + 3 < this.x + this.w && y > this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
                 if (touch) {
                     ceiling = (y - this.y - this.h);
                 }
                 return touch;
             }
             changeFloorLevel() {
-                if ((x + charwidth > this.x && x < this.x + this.w) && y + charheight <= this.y) {
+                if ((x + charwidth - 3 > this.x && x + 3 < this.x + this.w) && y + charheight <= this.y) {
                     floor = this.y;
                 }
             }
@@ -485,28 +486,28 @@
                 ctx.drawImage(img, 0, 0, this.w, this.h, this.x, this.y, this.w, this.h);
             }
             distance(x, y) {
-                var xpos = (x + charwidth -2> this.x && x +2 < this.x + this.w);
+                var xpos = (x + charwidth - 3 >= this.x && x + 3 <= this.x + this.w);
                 return xpos;
             }
             leftTouch(x, y) {
-                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 2);
-                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                var xpos = (x + charwidth >= this.x && x + charwidth <= this.x + 3);
+                var ypos = (y + charheight + 3 > this.y && y - 3 < (this.y + this.h));
                 return (xpos && ypos);
             }
             rightTouch(x, y) {
-                var xpos = (this.x + this.w >= x && this.x + this.w - 2 <= x);
-                var ypos = (y + charheight > this.y && y < (this.y + this.h));
+                var xpos = (this.x + this.w >= x && this.x + this.w - 3 <= x);
+                var ypos = (y + charheight + 3 > this.y && y - 3 < (this.y + this.h));
                 return (xpos && ypos);
             }
             under(x, y) {
-                var touch = (this.distance(x, y) && y >= this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
+                var touch = (x + charwidth - 3 > this.x && x + 3 < this.x + this.w && y >= this.y + this.h && y + diff_y - this.y - this.h < -diff_y);
                 if (touch) {
                     ceiling = (y - this.y - this.h);
                 }
                 return touch;
             }
             changeFloorLevel() {
-                if (y < this.y && this.distance(x, y)) {
+                if (y + charheight <= this.y && this.distance(x, y)) {
                     floor = this.y;
                 }
             }
@@ -544,9 +545,11 @@
                 }
             }
             distance(x, y) {
-                var xpos = (x + charwidth > this.x + 8 && x < this.x + this.number * 23 - 10);
+                var xpos = (x + charwidth > this.x + 8 && x < this.x + this.number * 22 - 10);
                 var ypos = (y + charheight > this.y - 15 && y + charheight <= this.y);
+                if (xpos && ypos) { console.log(this); }
                 return (xpos && ypos);
+
             }
         }
         class ReverseSpike {
@@ -564,7 +567,7 @@
             }
             distance(x, y) {
                 var xpos = (x + charwidth > this.x + 10 && x < this.x + this.number * 22 - 10);
-                var ypos = (y < this.y + 23 && y > this.y);
+                var ypos = (y < this.y + 22 && y > this.y);
                 return (xpos && ypos);
             }
         }
@@ -616,10 +619,12 @@
                 floorLevel();
                 if (movingRight && !jumping && !gripping && !falling) { movement = "rightmvmt"; }
                 else if (movingLeft && !jumping && !gripping && !falling) { movement = "leftmvmt"; }
-                else if (jumping && (movingLeft || movement == "staticleft" || movement == "gripright")) { movement = "jumpleft"; }
+                else if (gripping) { movement = (touch_right()) ? "gripright" : "gripleft"; }
+                if (jumping && (movingLeft || movement == "staticleft" || movement == "gripright")) { movement = "jumpleft"; }
                 else if (jumping && (movingRight || movement == "staticright" || movement == "gripleft")) { movement = "jumpright"; }
                 else if (falling && movingLeft) { movement = "fallleft"; }
                 else if (falling && movingRight) { movement = "fallright"; }
+                console.log(movement);
                 char.draw(x, y, movement);
                 if (y + charheight < floor && !jumping && !falling && !gripping) {
                     falling = true;
@@ -628,6 +633,10 @@
             }
         }
         function end(how) {
+            cancelAnimationFrame(AnimSaut);  //partially AI
+            cancelAnimationFrame(AnimFall);
+            cancelAnimationFrame(AnimGrip);
+            cancelAnimationFrame(AnimGame);
             $("restart").style.display = "none";
             jumping = false;
             movingLeft = false;
@@ -637,10 +646,6 @@
             timer = false;
             divinfoscanvas = false;
             game = false;
-            cancelAnimationFrame(AnimSaut);  //partially AI
-            cancelAnimationFrame(AnimFall);
-            cancelAnimationFrame(AnimGrip);
-            cancelAnimationFrame(AnimGame);
             i = 0;
             clearInterval(spriteinterval);
             clearCanvas();
@@ -846,7 +851,7 @@
                 }
                 else {
                     y += diff_y * 60 * delta;
-                    diff_y += gravity *(60*delta);
+                    diff_y += gravity * (60 * delta);
                     if (y + charheight >= floor) {
                         y = floor - charheight;
                         if (movement == "jumpright") { movement = "staticright"; }
@@ -874,7 +879,7 @@
             }
             else {
                 y += diff_y * (60 * delta);
-                diff_y += gravity*(60 * delta);
+                diff_y += gravity * (60 * delta);
                 if (y + charheight >= floor) {
                     y = floor - charheight;
                     if (movement == "fallright") { movement = "staticright"; }
@@ -891,19 +896,19 @@
         function grip() {
             falling = false;
             y += gravity_grip * (60 * delta);
-            if (y + charheight + gravity_grip >= floor) {
+            if (y + charheight + gravity_grip * (60 * delta) >= floor) {
                 if (movement == "gripleft") { movement = "staticright"; }
                 else if (movement == "gripright") { movement = "staticleft"; }
                 gripping = false;
             }
-            else if (!touch_walls()) {
-                gripping = false;
-                if (movement == "gripleft") { movement = "fallright"; }
-                else if (movement == "gripright") { movement = "fallleft"; }
-            }
             if (gripping) {
                 if (touch_right() && !jumping) {
                     movement = "gripright";
+                }
+                else if (!touch_walls()) {
+                    gripping = false;
+                    if (movement == "gripleft") { movement = "fallright"; }
+                    else if (movement == "gripright") { movement = "fallleft"; }
                 }
                 else if (touch_left() && !jumping) {
                     movement = "gripleft";
@@ -1063,7 +1068,7 @@
             f5 = new Floor(0, 0, c.width, 1);
             w1 = new Wall(750, 270, 30, 50);
             w2 = new Wall(300, 70, 30, 40);
-            s1 = new Spike(210, 600, 36);
+            s1 = new Spike(220, 600, 37);
             s2 = new Spike(1090, 600, 4);
             s3 = new Spike(320, 530, 2);
             s4 = new Spike(400, 530, 1);
@@ -1073,7 +1078,7 @@
             s8 = new ReverseSpike(330, 140, 5);
             s9 = new Spike(280, 110, 1);
             s10 = new Spike(330, 110, 1);
-            e1 = new Ejector(1000, 595, 90);
+            e1 = new Ejector(1035, 595, 55);
             e2 = new Ejector(420, 525, 30);
             e3 = new Ejector(380, 315, 40);
             e4 = new Ejector(100, 315, 40);
@@ -1152,7 +1157,7 @@
             e2 = new Ejector(449, 395, 40);
             e3 = new Ejector(945, 565, 45);
             s1 = new Spike(220, 600, 14);
-            s2 = new ReverseSpike(180, 280, 2);
+            s2 = new ReverseSpike(181, 280, 2);
             s3 = new ReverseSpike(230, 210, 4);
             s4 = new Spike(380, 400, 3);
             s5 = new Spike(489, 400, 3);
@@ -1170,8 +1175,8 @@
             s17 = new Spike(646, 600, 2);
             s18 = new Spike(230, 180, 2);
             s19 = new ReverseSpike(930, 380, 7);
-            w1 = new Wall(180, 230, 46, 50);
-            w2 = new Wall(1170, 220, 30, 150);
+            w1 = new Wall(180, 230, 45, 50);
+            w2 = new Wall(1170, 220, 40, 150);
             w3 = new Wall(610, 370, 30, 180);
             f0 = new Floor(0, c.height, c.width, 5);
             f1 = new Floor(0, 350, 100, 30);
