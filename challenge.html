@@ -324,33 +324,33 @@
             switch (canvasID) {
                 case "can1":
                     level = lev1;
-                    stars3 = 17.50;
-                    stars2 = 19.00;
-                    stars1 = 21.00;
+                    stars3 = 18.50;
+                    stars2 = 21.00;
+                    stars1 = 24.00;
                     break;
                 case "can2":
                     level = lev2;
-                    stars3 = 12.00;
-                    stars2 = 14.00;
-                    stars1 = 16.00;
+                    stars3 = 13.00;
+                    stars2 = 16.00;
+                    stars1 = 19.00;
                     break;
                 case "can3":
                     level = lev3;
-                    stars3 = 22.50;
-                    stars2 = 24.00;
-                    stars1 = 26.00;
+                    stars3 = 24.00;
+                    stars2 = 27.00;
+                    stars1 = 29.00;
                     break;
                 case "can4":
                     level = lev4;
-                    stars3 = 23.50;
-                    stars2 = 25.00;
-                    stars1 = 27.00;
+                    stars3 = 24.50;
+                    stars2 = 27.00;
+                    stars1 = 29.00;
                     break;
                 case "can5":
                     level = lev5;
                     stars3 = 18.75;
-                    stars2 = 20.00;
-                    stars1 = 22.00;
+                    stars2 = 22.00;
+                    stars1 = 24.50;
                     break;
                 default: break;
             }
@@ -545,7 +545,7 @@
                 }
             }
             distance(x, y) {
-                var xpos = (x + charwidth > this.x + 8 && x < this.x + this.number * 22 - 10);
+                var xpos = (x + charwidth > this.x + 7 && x < this.x + this.number * 22 - 10);
                 var ypos = (y + charheight > this.y - 15 && y + charheight <= this.y);
                 if (xpos && ypos) { console.log(this); }
                 return (xpos && ypos);
@@ -1008,7 +1008,7 @@
             s7 = new ReverseSpike(984, 230, 2);
             s8 = new Spike(904, 200, 1);
             s9 = new Spike(588, 310, 1);
-            s10 = new Spike(330, 310, 2);
+            s10 = new Spike(330, 310, 1);
             e1 = new Ejector(1010, 505, 40);
             e2 = new Ejector(290, 305, 40);
             elements = [goal, f1, f2, f3, f4, f5, f6, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, e1, e2];
