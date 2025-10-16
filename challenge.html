@@ -361,7 +361,7 @@
                 if (lastTime == 0) {
                     lastTime = timestamp;
                 }
-                delta = (timestamp - lastTime) / 100;
+                delta = (timestamp - lastTime) / 1000;
                 lastTime = timestamp;
                 if (game) {
                     update();
@@ -803,7 +803,7 @@
         //mouvements
         function gauche() {
             if ((x > 0) && !touch_right()) {
-                x -= 12 * delta;                  //120px par seconde/10
+                x -= 120 * delta;                  //120px par seconde
                 if (movingLeft) {
                     requestAnimationFrame(gauche);
                 }
@@ -811,7 +811,7 @@
         }
         function droite() {
             if ((x + charwidth < c.clientWidth) && !touch_left()) {
-                x += 12 * delta;
+                x += 120 * delta;
                 if (movingRight) {
                     requestAnimationFrame(droite);
                 }
@@ -820,7 +820,7 @@
 
         function saut(detente) {   //partially AI
             if (!jumping && jumpCounter == 0) {
-                diff_y = -detente * (6*delta);
+                diff_y = -detente;
                 jumping = true;
                 var test = diff_y;
                 var h = 0;
@@ -845,8 +845,8 @@
                     grip();
                 }
                 else {
-                    y += diff_y * 6 * delta;
-                    diff_y += gravity *(6*delta);
+                    y += diff_y * 60 * delta;
+                    diff_y += gravity *(60*delta);
                     if (y + charheight >= floor) {
                         y = floor - charheight;
                         if (movement == "jumpright") { movement = "staticright"; }
@@ -873,8 +873,8 @@
                 grip();
             }
             else {
-                y += diff_y * (6 * delta);
-                diff_y += gravity*(6 * delta);
+                y += diff_y * (60 * delta);
+                diff_y += gravity*(60 * delta);
                 if (y + charheight >= floor) {
                     y = floor - charheight;
                     if (movement == "fallright") { movement = "staticright"; }
@@ -890,7 +890,7 @@
 
         function grip() {
             falling = false;
-            y += gravity_grip * (6 * delta);
+            y += gravity_grip * (60 * delta);
             if (y + charheight + gravity_grip >= floor) {
                 if (movement == "gripleft") { movement = "staticright"; }
                 else if (movement == "gripright") { movement = "staticleft"; }
