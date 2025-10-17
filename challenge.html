@@ -245,6 +245,7 @@
         var divinfoscanvas = false;
         var divinfosend = false;
         var game = false;
+        var spacepress = false;
         var lastTime = 0;
         var time = 0;
         var current_time = 0;
@@ -357,12 +358,12 @@
             level();
             char = new Character();
             char.draw(x, y, movement);
-            function gameLoop(timestamp) { 
+            function gameLoop(timestamp) {
                 if (lastTime == 0) {
                     lastTime = timestamp;
                 }
                 delta = (timestamp - lastTime) / 1000;
-                delta = Math.min(delta, 0.02);          
+                delta = Math.min(delta, 0.02);
                 lastTime = timestamp;
                 if (game) {
                     update();
@@ -630,6 +631,19 @@
                     falling = true;
                     fall();
                 }
+                if (spacepress && !jumping && !falling && !touch_eject()) {
+                    spacepress = true;
+                    jumpCounter = 0;
+                    saut(detente_saut);
+                    jumpCounter++;
+                    if (movement == "staticright" || movement == "rightmvmt") {
+                        movement = "jumpright";
+                    }
+                    else if (movement == "staticleft" || movement == "leftmvmt") {
+                        movement = "jumpleft";
+                    }
+                }
+
             }
         }
         function end(how) {
@@ -646,6 +660,7 @@
             timer = false;
             divinfoscanvas = false;
             game = false;
+            spacepress = false;
             i = 0;
             clearInterval(spriteinterval);
             clearCanvas();
@@ -920,6 +935,7 @@
             document.addEventListener("keydown", function () {
                 if (c.style.display != "none") {
                     if (event.key == " " && !jumping && !falling && !touch_eject()) {
+                        spacepress = true;
                         jumpCounter = 0;
                         saut(detente_saut);
                         jumpCounter++;
@@ -938,6 +954,7 @@
                     }
                     else if (event.key == "ArrowLeft" && !movingLeft) {
                         movingLeft = true;
+                        movingRight = false;
                         gauche();
                         if (!timer) {
                             timer = true;
@@ -947,6 +964,7 @@
                     }
                     else if (event.key == "ArrowRight" && !movingRight) {
                         movingRight = true;
+                        movingLeft = false;
                         droite();
                         if (!timer) {
                             timer = true;
@@ -959,27 +977,30 @@
             document.addEventListener("keyup", function () {
                 if (c.style.display != "none") {
                     if (event.key == "ArrowLeft") {
-                        movingLeft = false;
                         if (jumping) { movement = "jumpleft"; }
                         else if (falling) { movement = "fallleft"; }
-                        else { movement = "staticleft"; }
+                        else if (movingLeft) { movement = "staticleft"; }
+                        movingLeft = false;
                     }
                     else if (event.key == "ArrowRight") {
-                        movingRight = false;
                         if (jumping) { movement = "jumpright"; }
                         else if (falling) { movement = "fallright"; }
-                        else { movement = "staticright"; }
+                        else if (movingRight) { movement = "staticright"; }
+                        movingRight = false;
 
+                    }
+                    else if (event.key == " ") {
+                        spacepress = false;
                     }
                 }
             });
         }
-        function clicks_end(){
-            document.addEventListener("keydown", function(event){
-                if ($("end").style.display!="none" &&  event.key=="Enter"){
-                    check(c.id)
+        function clicks_end() {
+            document.addEventListener("keydown", function (event) {
+                if ($("end").style.display != "none" && event.key == "Enter") {
+                    check(c.id);
                 }
-            })
+            });
         }
         //niveaux
         function lev1() { //Co-designed with Justine Dubied
